@@ -27,16 +27,23 @@ export default function Home() {
   const extractBadges = (htmlText) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlText, "text/html");
-    const badgeElements = doc.querySelectorAll('.profile-badge .ql-title-medium');
-    const badgeArray = Array.from(badgeElements).map((badge) => badge.textContent.trim())
-    // const badgeEarnDate = Array.from(doc.querySelectorAll('.profile-badge .ql-text-small')).map((badge) => badge.textContent.trim())
-    badgeArray.forEach((badge) => {
-      if (badgeSet.has(badge)) {
-        setPoints((points) => points + badgePoints[badge]);
+    const badgeElements = doc.querySelectorAll('.profile-badge');
+    const badgeDict = {};
+  
+    badgeElements.forEach((badgeElement) => {
+      const title = badgeElement.querySelector('.ql-title-medium').textContent.trim();
+      const date = badgeElement.querySelector('.ql-body-medium').textContent.trim().replace('Earned ', '');
+      badgeDict[title] = date;
+      console.log(badgeDict)
+  
+      if (badgeSet.has(title)) {
+        setPoints((points) => points + badgePoints[title]);
       }
-    })
-    return badgeArray;
+    });
+  
+    return badgeDict;
   };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
