@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import styles from './page.module.css';
+import { badgePoints, badgeSet } from "@/constants/constant";
 
 export default function Home() {
   const [profileLink, setProfileLink] = useState("");
@@ -27,7 +28,14 @@ export default function Home() {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlText, "text/html");
     const badgeElements = doc.querySelectorAll('.profile-badge .ql-title-medium');
-    return Array.from(badgeElements).map((badge) => badge.textContent.trim());
+    const badgeArray = Array.from(badgeElements).map((badge) => badge.textContent.trim())
+    // const badgeEarnDate = Array.from(doc.querySelectorAll('.profile-badge .ql-text-small')).map((badge) => badge.textContent.trim())
+    badgeArray.forEach((badge) => {
+      if (badgeSet.has(badge)) {
+        setPoints((points) => points + badgePoints[badge]);
+      }
+    })
+    return badgeArray;
   };
 
   const handleSubmit = async (e) => {
@@ -44,7 +52,7 @@ export default function Home() {
     if (htmlText) {
       console.log('htmlText : ', htmlText);
       const badges = extractBadges(htmlText);
-      setPoints(badges.length);
+      // setPoints(badges.length);
     } else {
       setError("Failed to fetch or process the profile.");
       setPoints(null);
