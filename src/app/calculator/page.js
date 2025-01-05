@@ -1,25 +1,25 @@
 'use client';
-
+``
 import { useState } from "react";
-import styles from './page.module.css';
+import styles from './calculator.module.css';
 import { badgePoints, badgeSet, monthlyGames } from "@/constants/constant";
+import Loader from "@/app/loader";
 
-export default function Home() {
+export default function Calculator() {
   const [profileLink, setProfileLink] = useState("");
   const [points, setPoints] = useState(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false); // Initialize loading state
 
   const fetchUrlViaProxy = async (url) => {
     try {
       const response = await fetch(`/api/proxy?url=${encodeURIComponent(url)}`);
-
       if (!response.ok) {
         throw new Error("Failed to fetch data");
       }
-
-      return await response.text(); // Fetch raw HTML
+      return await response.text();
     } catch (error) {
-      console.error("Error in fetchUrlViaProxy:", error.message);
+      console.error("Error:", error.message);
       return null;
     }
   };
@@ -28,51 +28,45 @@ export default function Home() {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlText, "text/html");
     const badgeElements = doc.querySelectorAll('.profile-badge');
-    const badgeDict = {};
-    let badgeArray = [];
-  
-    badgeElements.forEach((badgeElement) => 
-    {
-      const title = badgeElement.querySelector('.ql-title-medium').textContent.trim();
-      const date = badgeElement.querySelector('.ql-body-medium').textContent.trim().replace('Earned ', '');
-      badgeDict[title] = date;
-      console.log('badgeDict : ',badgeDict)
+    let totalPoints = 0;
 
-      if(Object.keys(monthlyGames).includes(title)){
-        setPoints((points) => points + monthlyGames[title]);
-        badgeArray.push({title : monthlyGames[title]});
-      }
-      else if (badgeSet.has(title)) {
-        setPoints((points) => points + badgePoints[title]);
-        badgeArray.push({title : badgePoints[title]});
+    badgeElements.forEach((badgeElement) => {
+      const title = badgeElement.querySelector('.ql-title-medium').textContent.trim();
+      if (Object.keys(monthlyGames).includes(title)) {
+        totalPoints += monthlyGames[title];
+      } else if (badgeSet.has(title)) {
+        totalPoints += badgePoints[title];
       }
     });
-  };
 
+    setPoints(totalPoints);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setPoints(0);
     setError("");
+    setLoading(true); // Start loader
 
     if (!profileLink) {
       setError("Please enter a profile link.");
+      setLoading(false); // Stop loader if error occurs
       return;
     }
 
     const htmlText = await fetchUrlViaProxy(profileLink);
-
     if (htmlText) {
-      console.log('htmlText : ', htmlText);
       extractBadges(htmlText);
     } else {
       setError("Failed to fetch or process the profile.");
-      setPoints(null);
     }
+
+    setLoading(false); // Stop loader when process is complete
   };
 
   return (
-    <div className={styles.container}>
+    <div className={styles['center-container']}>
+      <h1>Arcade Point Calculator</h1>
       <form onSubmit={handleSubmit}>
         <input
           type="text"
@@ -83,8 +77,15 @@ export default function Home() {
         />
         <button type="submit" className={styles.button}>Calculate</button>
       </form>
+
+      {/* Show loader when loading is true */}
+      {loading && <Loader />}
+
+      {/* Display error message if present */}
       {error && <p className={styles.error}>{error}</p>}
-      {points !== null && (
+
+      {/* Show points only when available and not loading */}
+      {points !== null && !loading && (
         <p className={styles.result}>
           🎉 Total Badges Earned: <strong>{points}</strong>
         </p>

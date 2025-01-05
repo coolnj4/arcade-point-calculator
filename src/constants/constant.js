@@ -1,9 +1,16 @@
 const arcadeStartTime = new Date("2024-12-01T00:00:00Z");
 const arcadeEndTime = new Date("2024-06-31T23:59:59Z");
 
+// add point calculation for special events where a game has more points within a certain time frame
+// validity of the when the point was earned
+// Game Name : Points
+
+const monthlyGames = {
+    'App Building with AppSheet': 2,
+    'Analyze BigQuery Data in Connected Sheets': 3
+}
+
 const badgeSet = new Set([
-    "App Building with AppSheet",
-    "Analyze BigQuery Data in Connected Sheets",
     "Implement Load Balancing on Compute Engine",
     "Set Up a Google Cloud Network",
     "Deploy Kubernetes Applications on Google Cloud",
@@ -100,7 +107,7 @@ const badgePoints = {
     "The Basics of Google Cloud Compute": 1,
     "Monitoring in Google Cloud": 1,
     "App Engine: 3 Ways": 1,
-    "Diwali in The Arcade": 2
+    "Diwali in The Arcade": 1
 };
 
-export { badgeSet, badgePoints };
+export { badgeSet, badgePoints, monthlyGames };
