@@ -2,23 +2,24 @@
   display: flex;
   justify-content: center;
   gap: 20px;
-  background: #f0f0f0;
+  background: var(--background);
   padding: 10px 0;
+  position: relative;
 }
 
 .nav a {
   text-decoration: none;
   padding: 10px 20px;
   border-radius: 5px;
-  color: #333;
+  color: var(--text);
   transition: background 0.3s ease;
 }
 
 .nav a:hover {
-  background: #e0e0e0;
+  background: var(--primary);
 }
 
 .nav .active {
-  background: #0070f3;
-  color: #fff;
+  background: var(--primary);
+  color: var(--text);
 }
