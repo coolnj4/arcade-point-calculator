@@ -47,20 +47,28 @@ export default function Calculator() {
     setPoints(0);
     setError("");
     setLoading(true); // Start loader
-
+  
+    const urlPattern = /^https:\/\/www\.cloudskillsboost\.google\/public_profiles\/[a-zA-Z0-9-]+$/;
+  
     if (!profileLink) {
       setError("Please enter a profile link.");
       setLoading(false); // Stop loader if error occurs
       return;
     }
-
+  
+    if (!urlPattern.test(profileLink)) {
+      setError("Invalid URL format. Please enter a valid profile link.");
+      setLoading(false); // Stop loader if error occurs
+      return;
+    }
+  
     const htmlText = await fetchUrlViaProxy(profileLink);
     if (htmlText) {
       extractBadges(htmlText);
     } else {
       setError("Failed to fetch or process the profile.");
     }
-
+  
     setLoading(false); // Stop loader when process is complete
   };
 
