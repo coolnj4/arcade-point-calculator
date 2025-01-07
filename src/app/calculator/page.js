@@ -1,5 +1,5 @@
 'use client';
-``
+
 import { useState } from "react";
 import styles from './calculator.module.css';
 import { badgePoints, badgeSet, monthlyGames } from "@/constants/constant";
@@ -93,7 +93,7 @@ export default function Calculator() {
       {error && <p className={styles.error}>{error}</p>}
 
       {/* Show points only when available and not loading */}
-      {points !== null && !loading && (
+      {points !== 0 && points !== null && !loading && (
         <p className={styles.result}>
           🎉 Total Badges Earned: <strong>{points}</strong>
         </p>
