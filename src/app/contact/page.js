@@ -45,7 +45,6 @@ export default function ContactPage() {
     <div className={styles['center-container']}>
       <div className={styles.content}>
         <h1>Contact Us</h1>
-        <p>Have questions? Reach out to us at support@arcadepoints.com.</p>
       </div>
       <form onSubmit={handleSubmit} className={styles['form-container']}>
         <input
