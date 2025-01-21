@@ -1,6 +1,7 @@
-const arcadeStartTime = new Date("2024-12-01T00:00:00Z");
-const arcadeEndTime = new Date("2024-06-31T23:59:59Z");
-
+const arcadeStartTime = new Date("2024-09-01T00:00:00Z"); // September 1, 2024 00:00:00 UTC
+const arcadeEndTime = new Date("2025-08-01T00:00:00Z");   // August 1, 2025 00:00:00 UTC
+// Update this timer with current start date and times as well as end date and times.
+// for testing use this date and time
 // add point calculation for special events where a game has more points within a certain time frame
 // validity of the when the point was earned
 // Game Name : Points
@@ -110,4 +111,4 @@ const badgePoints = {
     "Diwali in The Arcade": 1
 };
 
-export { badgeSet, badgePoints, monthlyGames };
+export { badgeSet, badgePoints, monthlyGames, arcadeStartTime, arcadeEndTime };
