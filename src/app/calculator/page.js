@@ -1,16 +1,24 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from './calculator.module.css';
-import { badgePoints, badgeSet, monthlyGames } from "@/constants/constant";
-import Loader from "@/app/loader";
+import { badgePoints, badgeSet, monthlyGames, arcadeStartTime, arcadeEndTime } from "@/constants/constant";
 
 export default function Calculator() {
   const [profileLink, setProfileLink] = useState("");
+  const [rememberProfile, setRememberProfile] = useState(false);
   const [points, setPoints] = useState(null);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false); // Initialize loading state
-  const [badgeDetails, setBadgeDetails] = useState([]); // Initialize badge details state
+  const [loading, setLoading] = useState(false);
+  const [badgeDetails, setBadgeDetails] = useState([]);
+
+  useEffect(() => {
+    const savedUrl = localStorage.getItem('profileUrl');
+    if (savedUrl) {
+      setProfileLink(savedUrl);
+      setRememberProfile(true);
+    }
+  }, []);
 
   const fetchUrlViaProxy = async (url) => {
     try {
@@ -31,97 +39,138 @@ export default function Calculator() {
     const badgeElements = doc.querySelectorAll('.profile-badge');
     let totalPoints = 0;
     const details = [];
-
+  
     badgeElements.forEach((badgeElement) => {
       const title = badgeElement.querySelector('.ql-title-medium').textContent.trim();
-      let points = 0;
-      if (Object.keys(monthlyGames).includes(title)) {
-        points = monthlyGames[title];
-      } else if (badgeSet.has(title)) {
-        points = badgePoints[title];
+      const earnedDate = badgeElement.querySelector('.ql-body-medium').textContent.trim().replace('Earned ', '');
+      const earnedDateTime = new Date(earnedDate);
+      
+      if (earnedDateTime >= arcadeStartTime && earnedDateTime <= arcadeEndTime) {
+        let points = 0;
+  
+        if (Object.keys(monthlyGames).includes(title)) {
+          points = monthlyGames[title];
+        } else if (badgeSet.has(title)) {
+          points = badgePoints[title];
+        }
+  
+        if (points > 0) {
+          totalPoints += points;
+          details.push({ title, points, earnedDate });
+        }
       }
-      totalPoints += points;
-      details.push({ title, points });
     });
-
+  
     setPoints(totalPoints);
-    setBadgeDetails(details); // Set badge details
+    setBadgeDetails(details);
+  };
+
+  const handleRememberChange = (e) => {
+    setRememberProfile(e.target.checked);
+    if (e.target.checked) {
+      localStorage.setItem('profileUrl', profileLink);
+    } else {
+      localStorage.removeItem('profileUrl');
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setPoints(0);
+    setPoints(null);
     setError("");
-    setLoading(true); // Start loader
-  
-    const urlPattern = /^https:\/\/www\.cloudskillsboost\.google\/public_profiles\/[a-zA-Z0-9-]+$/;
-  
+    setLoading(true);
+
+    const urlPattern = /^https:\/\/www\.cloudskillsboost\.google\/public_profiles\/.+$/;
+
     if (!profileLink) {
       setError("Please enter a profile link.");
-      setLoading(false); // Stop loader if error occurs
+      setLoading(false);
       return;
     }
-  
+
     if (!urlPattern.test(profileLink)) {
       setError("Invalid URL format. Please enter a valid profile link.");
-      setLoading(false); // Stop loader if error occurs
+      setLoading(false);
       return;
     }
-  
-    const htmlText = await fetchUrlViaProxy(profileLink);
-    if (htmlText) {
-      extractBadges(htmlText);
+
+    const htmlContent = await fetchUrlViaProxy(profileLink);
+    if (htmlContent) {
+      extractBadges(htmlContent);
     } else {
-      setError("Failed to fetch or process the profile.");
+      setError("Failed to fetch profile data");
     }
-  
-    setLoading(false); // Stop loader when process is complete
+    setLoading(false);
   };
 
   return (
     <div className={styles['center-container']}>
-      <h1>Arcade Point Calculator</h1>
+      <h1 className={styles.title}>Arcade Point Calculator</h1>
       <form onSubmit={handleSubmit}>
         <input
           type="text"
-          placeholder="Enter your profile link"
           value={profileLink}
           onChange={(e) => setProfileLink(e.target.value)}
+          placeholder="Paste your profile link here"
           className={styles.input}
         />
-        <button type="submit" className={styles.button} disabled={loading}>
-          {loading ? <span className={styles.spinner}></span> : "Calculate"}
+        
+        <div className={styles.checkboxContainer}>
+          <input
+            type="checkbox"
+            id="remember-profile"
+            checked={rememberProfile}
+            onChange={handleRememberChange}
+            className={styles.checkbox}
+          />
+          <label htmlFor="remember-profile">Remember me</label>
+        </div>
+
+        <button 
+          type="submit"
+          className={styles.button}
+          disabled={loading}
+        >
+          {loading ? 'Calculating...' : 'Calculate Points'}
         </button>
       </form>
 
-      {/* Display error message if present */}
-      {error && <p className={styles.error}>{error}</p>}
-
-      {/* Show points table only when available and not loading */}
-      {badgeDetails.length > 0 && !loading && (
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Badge Name</th>
-              <th>Points Earned</th>
-            </tr>
-          </thead>
-          <tbody>
-            {badgeDetails.map((badge, index) => (
-              <tr key={index}>
-                <td>{badge.title}</td>
-                <td>{badge.points}</td>
+      {error && <div className={styles.error}>{error}</div>}
+      
+      {points !== null && (
+        <div className={styles.tableContainer}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Badge Name</th>
+                <th>Points</th>
+                <th>Earned Date</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      {/* Show total points only when available and not loading */}
-      {points !== 0 && points !== null && !loading && (
-        <p className={styles.result}>
-          🎉 Total Badges Earned: <strong>{points}</strong>
-        </p>
+            </thead>
+            <tbody>
+              {badgeDetails.length > 0 ? (
+                badgeDetails.map((badge, index) => (
+                  <tr key={index}>
+                    <td>{badge.title}</td>
+                    <td>{badge.points}</td>
+                    <td>{badge.earnedDate}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="3" className={styles.emptyMessage}>
+                    No eligible badges found in the arcade period
+                  </td>
+                </tr>
+              )}
+              <tr className={styles.totalRow}>
+                <td><strong>Total Points</strong></td>
+                <td><strong>{points || 0}</strong></td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
