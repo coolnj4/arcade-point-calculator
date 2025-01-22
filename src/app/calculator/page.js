@@ -1,3 +1,4 @@
+/* filepath: /e:/Arcade point calculator/arcade-point-calculator/src/app/calculator/page.js */
 'use client';
 
 import { useState, useEffect } from "react";
@@ -11,6 +12,7 @@ export default function Calculator() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [badgeDetails, setBadgeDetails] = useState([]);
+  const [isCalculated, setIsCalculated] = useState(false);
 
   useEffect(() => {
     const savedUrl = localStorage.getItem('profileUrl');
@@ -23,9 +25,7 @@ export default function Calculator() {
   const fetchUrlViaProxy = async (url) => {
     try {
       const response = await fetch(`/api/proxy?url=${encodeURIComponent(url)}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch data");
-      }
+      if (!response.ok) throw new Error("Failed to fetch data");
       return await response.text();
     } catch (error) {
       console.error("Error:", error.message);
@@ -47,13 +47,11 @@ export default function Calculator() {
       
       if (earnedDateTime >= arcadeStartTime && earnedDateTime <= arcadeEndTime) {
         let points = 0;
-  
         if (Object.keys(monthlyGames).includes(title)) {
           points = monthlyGames[title];
         } else if (badgeSet.has(title)) {
           points = badgePoints[title];
         }
-  
         if (points > 0) {
           totalPoints += points;
           details.push({ title, points, earnedDate });
@@ -79,6 +77,7 @@ export default function Calculator() {
     setPoints(null);
     setError("");
     setLoading(true);
+    setIsCalculated(false);
 
     const urlPattern = /^https:\/\/www\.cloudskillsboost\.google\/public_profiles\/.+$/;
 
@@ -97,6 +96,7 @@ export default function Calculator() {
     const htmlContent = await fetchUrlViaProxy(profileLink);
     if (htmlContent) {
       extractBadges(htmlContent);
+      setIsCalculated(true);
     } else {
       setError("Failed to fetch profile data");
     }
@@ -105,40 +105,46 @@ export default function Calculator() {
 
   return (
     <div className={styles['center-container']}>
-      <h1 className={styles.title}>Arcade Point Calculator</h1>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={profileLink}
-          onChange={(e) => setProfileLink(e.target.value)}
-          placeholder="Paste your profile link here"
-          className={styles.input}
-        />
+      <div className={`${styles['form-section']} ${isCalculated ? styles.calculated : ''}`}>
+        <h1 className={`${styles.title} ${isCalculated ? styles.calculated : ''}`}>
+          Arcade Point Calculator
+        </h1>
         
-        <div className={styles.checkboxContainer}>
-          <input
-            type="checkbox"
-            id="remember-profile"
-            checked={rememberProfile}
-            onChange={handleRememberChange}
-            className={styles.checkbox}
-          />
-          <label htmlFor="remember-profile">Remember me</label>
-        </div>
+        <form onSubmit={handleSubmit} className={styles.formContainer}>
+          <div className={styles.inputGroup}>
+            <input
+              type="text"
+              value={profileLink}
+              onChange={(e) => setProfileLink(e.target.value)}
+              placeholder="Paste your profile link here"
+              className={styles.input}
+            />
+          </div>
+          
+          <div className={styles.checkboxContainer}>
+            <input
+              type="checkbox"
+              id="remember-profile"
+              checked={rememberProfile}
+              onChange={handleRememberChange}
+            />
+            <label htmlFor="remember-profile">Remember me</label>
+          </div>
 
-        <button 
-          type="submit"
-          className={styles.button}
-          disabled={loading}
-        >
-          {loading ? 'Calculating...' : 'Calculate Points'}
-        </button>
-      </form>
+          <button 
+            type="submit"
+            className={styles.button}
+            disabled={loading}
+          >
+            {loading ? 'Calculating...' : 'Calculate Points'}
+          </button>
+        </form>
 
-      {error && <div className={styles.error}>{error}</div>}
-      
+        {error && <div className={styles.error}>{error}</div>}
+      </div>
+
       {points !== null && (
-        <div className={styles.tableContainer}>
+        <div className={`${styles.tableContainer} ${isCalculated ? styles.visible : ''}`}>
           <table className={styles.table}>
             <thead>
               <tr>
